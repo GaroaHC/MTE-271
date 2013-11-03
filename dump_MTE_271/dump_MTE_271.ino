@@ -1,6 +1,8 @@
 //programmed by Felipe Sanches
 //released to the public domain
 
+int OE = A5;
+
 int BD0 = 2;
 int BD1 = 3;
 int BD2 = 4;
@@ -20,6 +22,8 @@ int D2 = 12; //D5 | D1
 int D3 = 13; //D4 | D0
 
 void setup(){
+  pinMode(OE, OUTPUT);
+
   pinMode(S0, OUTPUT);
   pinMode(S1, OUTPUT);
   pinMode(S2, OUTPUT);
@@ -39,14 +43,54 @@ void setup(){
   pinMode(D3, INPUT);
 
   Serial.begin(38400);
+  digitalWrite(OE, LOW);
 }
 
+int endereco = 0;
+int dado = 0;
+
 void loop(){
-
-  int endereco = 0;
-  int dado = 0;
-
+   //inicia com endereço 1 (pode inicialmente causar escritas espurias em qualquer dos registradores!)
+  //portante eh apenas nosso estado inicial para termos segurança de onde estamos partindo
+    digitalWrite(S0, HIGH);
+    digitalWrite(S1, LOW);
+    digitalWrite(S2, LOW);
+  
   while (endereco < 20000){
+
+    digitalWrite(S0, LOW);//1->0 (sinal 000 nao faz nada)
+
+    digitalWrite(BD0, LOW); //?
+    digitalWrite(BD1, LOW); //?
+    digitalWrite(BD2, LOW); //?
+    digitalWrite(BD3, LOW); //?
+    digitalWrite(BD4, LOW); //?
+    digitalWrite(BD5, LOW); //?
+    digitalWrite(BD6, LOW); //?
+    digitalWrite(BD7, LOW); //?
+
+    delay(1);
+    digitalWrite(S2, HIGH);//0->4
+    //seleciona endereço 4 (100) (nos pinos 8, 2 e 1 da porta paralela)
+    //para escrever parte da configuraçao
+
+    digitalWrite(BD0, LOW); //EPROM Chip Enable
+    digitalWrite(BD1, LOW); //?
+    digitalWrite(BD2, LOW); //?
+    digitalWrite(BD3, LOW); //?
+    digitalWrite(BD4, LOW); //?
+    digitalWrite(BD5, LOW); //?
+    digitalWrite(BD6, LOW); //?
+    digitalWrite(BD7, LOW); //?
+
+    delay(1);
+    //seleciona endereço 5 (101) (nos pinos 8, 2 e 1 da porta paralela)
+    //para escrever outra parte da configuraçao
+
+    digitalWrite(S0, HIGH);//4->5
+//    digitalWrite(S1, LOW);//5->5
+//    digitalWrite(S2, HIGH);//5->5
+
     //escreve 8 bits baixos de endereço (nos pinos 3,5,7,9,11,13,15,17 da porta paralela)
     digitalWrite(BD0, endereco & (1<<0) ? HIGH : LOW);
     digitalWrite(BD1, endereco & (1<<1) ? HIGH : LOW);
@@ -59,9 +103,9 @@ void loop(){
 
     delay(1);
     //seleciona endereço 2 (010) (nos pinos 8, 2 e 1 da porta paralela)
-    digitalWrite(S0, LOW);
-    digitalWrite(S1, HIGH);
-    digitalWrite(S2, LOW);
+    digitalWrite(S1, HIGH); //5->7 (escreve sem querer num reg de endereçamento)
+    digitalWrite(S2, LOW); //7->6 (nao faz nada ?)
+    digitalWrite(S0, LOW); //6->2
     
     //escreve 8 bits altos de endereço
     digitalWrite(BD0, endereco & (1<<8) ? HIGH : LOW);
@@ -75,9 +119,9 @@ void loop(){
 
     delay(1);
     //seleciona endereço 3 (011) (e já é suficiente também para se selecionar leitura do primeiro nibble)
-    digitalWrite(S0, HIGH);
-    digitalWrite(S1, HIGH);
-    digitalWrite(S2, LOW);
+    digitalWrite(S0, HIGH);//2->3
+//    digitalWrite(S1, HIGH);3->3
+//    digitalWrite(S2, LOW);3->3
     delay(1);
     
     //lê 4 bits dos pinos 19-21-23-25 da porta paralela
@@ -88,9 +132,9 @@ void loop(){
     if (digitalRead(D3)) dado += (1<<4);
 
     //seleciona endereço 1 para alternar para leitura do outro nibble
-    digitalWrite(S0, HIGH);
-    digitalWrite(S1, LOW);
-    digitalWrite(S2, LOW);
+//    digitalWrite(S0, HIGH);//3->3
+    digitalWrite(S1, LOW);//3->1
+//    digitalWrite(S2, LOW);//1->1
 
     delay(1);
     //lê 4 bits dos pinos 19-21-23-25 da porta paralela 
@@ -108,5 +152,7 @@ void loop(){
 
     endereco++;
   }
+
+  while(true) {};
 }
 
